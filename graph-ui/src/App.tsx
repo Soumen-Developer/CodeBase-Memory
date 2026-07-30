@@ -4,6 +4,7 @@ import { StatsTab } from "./components/StatsTab";
 import { ControlTab } from "./components/ControlTab";
 import type { TabId } from "./lib/types";
 import { useUiMessages } from "./lib/i18n";
+import { loadUITheme, applyUITheme } from "./lib/density";
 
 const TAB_IDS: TabId[] = ["graph", "stats", "control"];
 
@@ -34,6 +35,12 @@ export function App() {
   const t = useUiMessages();
   const [route, setRoute] = useState<RouteState>(readRoute);
   const { tab: activeTab, project: selectedProject } = route;
+
+  /* Apply saved UI theme on mount */
+  useEffect(() => {
+    const theme = loadUITheme();
+    applyUITheme(theme);
+  }, []);
 
   /* Normalize the URL on first load so it always carries the current route. */
   useEffect(() => {
