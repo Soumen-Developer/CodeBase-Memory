@@ -101,7 +101,7 @@ jobs:
     continue-on-error: ${{ matrix.optional == true }}
     timeout-minutes: 240
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install deps (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
@@ -194,7 +194,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install deps (Ubuntu)
         if: runner.os == 'Linux'
@@ -250,7 +250,7 @@ jobs:
     continue-on-error: ${{ matrix.optional == true }}
     timeout-minutes: 240
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Defender posture: real-time protection is POLICY-LOCKED OFF on hosted
       # Windows images (verified 2026-07-27: WinDefend starts and
@@ -367,7 +367,7 @@ jobs:
       # The union proof lives in the canonical scripts/ci entry, not inline
       # YAML (venue-parity contract) — checkout (into repo/, so the manifest
       # download below stays untouched) provides the script.
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: repo
 
@@ -390,7 +390,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2
         with:
