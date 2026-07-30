@@ -1,0 +1,61 @@
+# docker-compose.yml — Production deployment for codebase-memory-mcp
+#
+# Services:
+#   cbm-daemon  — Long-running daemon with HTTP UI (port 9749)
+#   cbm-cli     — One-shot CLI tool (uses shared daemon socket)
+#
+# Usage:
+#   docker compose up -d cbm-daemon          # Start daemon + UI
+#   docker compose run --rm cbm-cli --version # Run one-off CLI command
+#   docker compose logs -f cbm-daemon        # Follow daemon logs
+#
+# Ports:
+#   9749 — HTTP UI (graph visualization, RPC, API)
+#   Unix socket at /run/cbm/cbm-<instance-key>.sock (internal)
+
+services:
+  cbm-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codebase-memory-mcp-daemon
+    restart: unless-stopped
+    ports:
+      - "9749:9749"     # HTTP UI port
+    volumes:
+      - cbm-runtime:/run/cbm           # Daemon Unix socket (shared with CLI)
+      - cbm-cache:/root/.cache/codebase-memory-mcp  # Persistent cache/index
+      - .:/workspace:ro                # Project workspace (read-only for indexing)
+    environment:
+      - CBM_CACHE_DIR=/root/.cache/codebase-memory-mcp
+      - HOME=/root
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9749/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    command: ["--ui=true", "--port=9749"]
+
+  cbm-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codebase-memory-mcp-cli
+    entrypoint: ["codebase-memory-mcp"]
+    # No ports — CLI talks to daemon via shared Unix socket volume
+    volumes:
+      - cbm-runtime:/run/cbm
+      - cbm-cache:/root/.cache/codebase-memory-mcp
+      - .:/workspace
+    environment:
+      - CBM_CACHE_DIR=/root/.cache/codebase-memory-mcp
+      - HOME=/root
+    # Override command per invocation, e.g.:
+    #   docker compose run --rm cbm-cli --version
+    #   docker compose run --rm cbm-cli index /workspace
+    command: ["--help"]
+
+volumes:
+  cbm-runtime:   # Unix socket directory for daemon↔CLI communication
+  cbm-cache:     # Persistent index cache across container restarts
