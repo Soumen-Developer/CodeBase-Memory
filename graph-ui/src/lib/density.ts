@@ -100,6 +100,195 @@ export const DISPLAY_LIMITS = {
   bloom: { min: 0, max: 2 },
 } as const;
 
+/* ── UI Color Theme Presets ──────────────────────────────────── *
+ * Predefined color schemes for the UI chrome (sidebar, buttons, etc.).
+ * Applied via CSS custom properties on :root. */
+
+export interface UITheme {
+  name: string;
+  colors: {
+    /** Primary brand color — buttons, links, highlights */
+    primary: string;
+    /** Primary foreground (text on primary) */
+    primaryForeground: string;
+    /** Secondary muted color — borders, dividers */
+    secondary: string;
+    /** Secondary foreground */
+    secondaryForeground: string;
+    /** Accent color — cyan/teal for data highlights */
+    accent: string;
+    /** Accent foreground */
+    accentForeground: string;
+    /** Background base */
+    background: string;
+    /** Background for cards/popovers */
+    card: string;
+    /** Card foreground */
+    cardForeground: string;
+    /** Border color */
+    border: string;
+    /** Muted background */
+    muted: string;
+    /** Muted foreground */
+    mutedForeground: string;
+    /** Destructive (error/danger) */
+    destructive: string;
+    /** Destructive foreground */
+    destructiveForeground: string;
+    /** Ring/focus color */
+    ring: string;
+  };
+}
+
+export const UI_THEMES: Record<string, UITheme> = {
+  default: {
+    name: "Default (Cyan)",
+    colors: {
+      primary: "hsl(199 89% 48%)",
+      primaryForeground: "hsl(0 0% 100%)",
+      secondary: "hsl(200 20% 15%)",
+      secondaryForeground: "hsl(0 0% 90%)",
+      accent: "hsl(187 85% 43%)",
+      accentForeground: "hsl(0 0% 100%)",
+      background: "hsl(200 30% 5%)",
+      card: "hsl(200 25% 8%)",
+      cardForeground: "hsl(0 0% 95%)",
+      border: "hsl(200 15% 20%)",
+      muted: "hsl(200 15% 12%)",
+      mutedForeground: "hsl(200 10% 55%)",
+      destructive: "hsl(0 84% 60%)",
+      destructiveForeground: "hsl(0 0% 100%)",
+      ring: "hsl(187 85% 43%)",
+    },
+  },
+  emerald: {
+    name: "Emerald",
+    colors: {
+      primary: "hsl(160 84% 39%)",
+      primaryForeground: "hsl(0 0% 100%)",
+      secondary: "hsl(155 20% 15%)",
+      secondaryForeground: "hsl(0 0% 90%)",
+      accent: "hsl(158 85% 43%)",
+      accentForeground: "hsl(0 0% 100%)",
+      background: "hsl(155 30% 5%)",
+      card: "hsl(155 25% 8%)",
+      cardForeground: "hsl(0 0% 95%)",
+      border: "hsl(155 15% 20%)",
+      muted: "hsl(155 15% 12%)",
+      mutedForeground: "hsl(155 10% 55%)",
+      destructive: "hsl(0 84% 60%)",
+      destructiveForeground: "hsl(0 0% 100%)",
+      ring: "hsl(158 85% 43%)",
+    },
+  },
+  amber: {
+    name: "Amber",
+    colors: {
+      primary: "hsl(38 92% 50%)",
+      primaryForeground: "hsl(0 0% 100%)",
+      secondary: "hsl(40 20% 15%)",
+      secondaryForeground: "hsl(0 0% 90%)",
+      accent: "hsl(43 96% 56%)",
+      accentForeground: "hsl(0 0% 100%)",
+      background: "hsl(40 30% 5%)",
+      card: "hsl(40 25% 8%)",
+      cardForeground: "hsl(0 0% 95%)",
+      border: "hsl(40 15% 20%)",
+      muted: "hsl(40 15% 12%)",
+      mutedForeground: "hsl(40 10% 55%)",
+      destructive: "hsl(0 84% 60%)",
+      destructiveForeground: "hsl(0 0% 100%)",
+      ring: "hsl(43 96% 56%)",
+    },
+  },
+  violet: {
+    name: "Violet",
+    colors: {
+      primary: "hsl(262 83% 58%)",
+      primaryForeground: "hsl(0 0% 100%)",
+      secondary: "hsl(260 20% 15%)",
+      secondaryForeground: "hsl(0 0% 90%)",
+      accent: "hsl(262 85% 65%)",
+      accentForeground: "hsl(0 0% 100%)",
+      background: "hsl(260 30% 5%)",
+      card: "hsl(260 25% 8%)",
+      cardForeground: "hsl(0 0% 95%)",
+      border: "hsl(260 15% 20%)",
+      muted: "hsl(260 15% 12%)",
+      mutedForeground: "hsl(260 10% 55%)",
+      destructive: "hsl(0 84% 60%)",
+      destructiveForeground: "hsl(0 0% 100%)",
+      ring: "hsl(262 85% 65%)",
+    },
+  },
+  rose: {
+    name: "Rose",
+    colors: {
+      primary: "hsl(346 87% 55%)",
+      primaryForeground: "hsl(0 0% 100%)",
+      secondary: "hsl(350 20% 15%)",
+      secondaryForeground: "hsl(0 0% 90%)",
+      accent: "hsl(346 85% 62%)",
+      accentForeground: "hsl(0 0% 100%)",
+      background: "hsl(350 30% 5%)",
+      card: "hsl(350 25% 8%)",
+      cardForeground: "hsl(0 0% 95%)",
+      border: "hsl(350 15% 20%)",
+      muted: "hsl(350 15% 12%)",
+      mutedForeground: "hsl(350 10% 55%)",
+      destructive: "hsl(0 84% 60%)",
+      destructiveForeground: "hsl(0 0% 100%)",
+      ring: "hsl(346 85% 62%)",
+    },
+  },
+  slate: {
+    name: "Slate",
+    colors: {
+      primary: "hsl(215 28% 55%)",
+      primaryForeground: "hsl(0 0% 100%)",
+      secondary: "hsl(215 20% 15%)",
+      secondaryForeground: "hsl(0 0% 90%)",
+      accent: "hsl(215 25% 65%)",
+      accentForeground: "hsl(0 0% 100%)",
+      background: "hsl(215 30% 5%)",
+      card: "hsl(215 25% 8%)",
+      cardForeground: "hsl(0 0% 95%)",
+      border: "hsl(215 15% 20%)",
+      muted: "hsl(215 15% 12%)",
+      mutedForeground: "hsl(215 10% 55%)",
+      destructive: "hsl(0 84% 60%)",
+      destructiveForeground: "hsl(0 0% 100%)",
+      ring: "hsl(215 25% 65%)",
+    },
+  },
+};
+
+export const DEFAULT_UI_THEME = "default";
+
+const UI_THEME_STORAGE_KEY = "cbm-ui-theme";
+
+export function loadUITheme(): string {
+  try {
+    const raw = localStorage.getItem(UI_THEME_STORAGE_KEY);
+    if (raw && UI_THEMES[raw]) return raw;
+  } catch { /* ignore */ }
+  return DEFAULT_UI_THEME;
+}
+
+export function saveUITheme(theme: string) {
+  try {
+    localStorage.setItem(UI_THEME_STORAGE_KEY, theme);
+  } catch { /* ignore */ }
+}
+
+export function applyUITheme(theme: string) {
+  const t = UI_THEMES[theme] ?? UI_THEMES[DEFAULT_UI_THEME];
+  const root = document.documentElement;
+  Object.entries(t.colors).forEach(([key, value]) => {
+    root.style.setProperty(`--${key}`, value);
+  });
+}
+
 const DISPLAY_STORAGE_KEY = "cbm-display";
 
 function clampSetting(key: keyof DisplaySettings, value: unknown): number {
