@@ -1,0 +1,64 @@
+# .dockerignore — Exclude files not needed for the build
+
+# Git
+.git
+.gitignore
+
+# Build artifacts
+build/
+*.o
+*.a
+*.so
+*.dylib
+
+# Node modules
+node_modules/
+graph-ui/node_modules/
+graph-ui/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+memlab-*.jsonl
+memlab-*.log
+
+# Soak test outputs
+soak-*/
+soak-results/
+
+# Test fixtures
+test-infrastructure/
+
+# Documentation (not needed in build)
+*.md
+!README.md
+!LICENSE
+
+# Vendored sources (needed for build)
+!vendored/
+
+# Scripts output
+*.tar.gz
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+
+# Local config
+.mcp.json
+.mcpregistry_*
+
+# Private/scratch
+private/
+reference/
+memory/

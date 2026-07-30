@@ -4,6 +4,7 @@ import { StatsTab } from "./components/StatsTab";
 import { ControlTab } from "./components/ControlTab";
 import type { TabId } from "./lib/types";
 import { useUiMessages } from "./lib/i18n";
+import { loadUITheme, applyUITheme } from "./lib/density";
 
 const TAB_IDS: TabId[] = ["graph", "stats", "control"];
 
@@ -36,7 +37,7 @@ export function App() {
   const [version, setVersion] = useState<string | null>(null);
   const { tab: activeTab, project: selectedProject } = route;
 
-  useEffect(() => {
+useEffect(() => {
     let cancelled = false;
     void fetch("/api/ui-config")
       .then((response) => (response.ok ? response.json() : null))
@@ -49,6 +50,12 @@ export function App() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  /* Apply saved UI theme on mount */
+  useEffect(() => {
+    const theme = loadUITheme();
+    applyUITheme(theme);
   }, []);
 
   /* Normalize the URL on first load so it always carries the current route. */
