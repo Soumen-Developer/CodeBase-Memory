@@ -4,6 +4,11 @@ import {
   DEFAULT_DISPLAY_SETTINGS,
   DISPLAY_LIMITS,
   type DisplaySettings,
+  UI_THEMES,
+  DEFAULT_UI_THEME,
+  loadUITheme,
+  saveUITheme,
+  applyUITheme,
 } from "../lib/density";
 
 interface DisplaySettingsMenuProps {
@@ -52,6 +57,7 @@ export function DisplaySettingsMenu({
   onChange,
 }: DisplaySettingsMenuProps) {
   const [open, setOpen] = useState(false);
+  const [uiTheme, setUiTheme] = useState(loadUITheme());
   const rootRef = useRef<HTMLDivElement>(null);
 
   /* Close on outside click / Escape */
@@ -81,6 +87,23 @@ export function DisplaySettingsMenu({
     settings.nodeGlow === DEFAULT_DISPLAY_SETTINGS.nodeGlow &&
     settings.bloom === DEFAULT_DISPLAY_SETTINGS.bloom;
 
+  const isThemeDefault = uiTheme === DEFAULT_UI_THEME;
+
+  const handleThemeChange = (theme: string) => {
+    setUiTheme(theme);
+    saveUITheme(theme);
+    applyUITheme(theme);
+  };
+
+  const resetAll = () => {
+    onChange(DEFAULT_DISPLAY_SETTINGS);
+    setUiTheme(DEFAULT_UI_THEME);
+    saveUITheme(DEFAULT_UI_THEME);
+    applyUITheme(DEFAULT_UI_THEME);
+  };
+
+  const anyChanged = !isDefault || !isThemeDefault;
+
   return (
     <div ref={rootRef} className="relative">
       <Button
@@ -89,17 +112,18 @@ export function DisplaySettingsMenu({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        title="Contrast & brightness"
+        title="Display settings"
       >
-        Display{!isDefault && <span className="ml-1 text-cyan-300">•</span>}
+        Display{anyChanged && <span className="ml-1 text-cyan-300">•</span>}
       </Button>
 
       {open && (
         <div
           role="dialog"
           aria-label="Display settings"
-          className="absolute top-10 right-0 w-64 p-4 rounded-lg border border-border/60 bg-[#0b1920]/95 backdrop-blur-md shadow-xl z-20 space-y-3.5"
+          className="absolute top-10 right-0 w-72 p-4 rounded-lg border border-border/60 bg-[#0b1920]/95 backdrop-blur-md shadow-xl z-20 space-y-3.5"
         >
+          {/* Contrast section */}
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-medium text-foreground/50 uppercase tracking-widest">
               Contrast
@@ -137,6 +161,56 @@ export function DisplaySettingsMenu({
             max={DISPLAY_LIMITS.bloom.max}
             onChange={(bloom) => set({ bloom })}
           />
+
+          {/* UI Theme section */}
+          <div className="pt-1 border-t border-border/30">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-medium text-foreground/50 uppercase tracking-widest">
+                UI Colors
+              </span>
+              <button
+                onClick={() => handleThemeChange(DEFAULT_UI_THEME)}
+                className="text-[10px] text-primary/70 hover:text-primary transition-colors disabled:opacity-30"
+                disabled={isThemeDefault}
+              >
+                Reset
+              </button>
+            </div>
+
+            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              {Object.entries(UI_THEMES).map(([key, theme]) => (
+                <button
+                  key={key}
+                  onClick={() => handleThemeChange(key)}
+                  className={`w-full text-left px-2 py-1.5 rounded text-[11px] transition-colors ${
+                    uiTheme === key
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "text-foreground/70 hover:bg-white/[0.04] hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-3 h-3 rounded border border-border"
+                      style={{ backgroundColor: `hsl(${theme.colors.primary})` }}
+                    />
+                    <span>{theme.name}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Reset All */}
+          {anyChanged && (
+            <div className="pt-1 border-t border-border/30">
+              <button
+                onClick={resetAll}
+                className="w-full text-left px-2 py-1.5 rounded text-[11px] text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                Reset All to Defaults
+              </button>
+            </div>
+          )}
 
           <p className="text-[9px] text-foreground/30 pt-1 border-t border-border/30">
             1.00× follows the automatic density compensation. Lower the
