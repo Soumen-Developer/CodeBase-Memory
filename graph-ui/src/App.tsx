@@ -37,7 +37,14 @@ export function App() {
   const [version, setVersion] = useState<string | null>(null);
   const { tab: activeTab, project: selectedProject } = route;
 
-useEffect(() => {
+/* Apply saved UI theme on mount */
+  useEffect(() => {
+    const theme = loadUITheme();
+    applyUITheme(theme);
+  }, []);
+
+  /* Fetch UI config for version display */
+  useEffect(() => {
     let cancelled = false;
     void fetch("/api/ui-config")
       .then((response) => (response.ok ? response.json() : null))
@@ -50,12 +57,6 @@ useEffect(() => {
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  /* Apply saved UI theme on mount */
-  useEffect(() => {
-    const theme = loadUITheme();
-    applyUITheme(theme);
   }, []);
 
   /* Normalize the URL on first load so it always carries the current route. */
