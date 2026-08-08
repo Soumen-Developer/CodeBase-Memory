@@ -70,8 +70,8 @@ echo "--- URL audit ---"
 
 # Allowed URL prefixes
 ALLOWED_URLS=(
-    "https://api.github.com/repos/DeusData/codebase-memory-mcp"
-    "https://github.com/DeusData/codebase-memory-mcp"
+    "https://api.github.com/repos/Soumen-Developer/CodeBase-Memory"
+    "https://github.com/Soumen-Developer/CodeBase-Memory"
     "http://127.0.0.1"
     "http://localhost"
     # SQLite internal URLs (part of vendored sqlite3 strings)

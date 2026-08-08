@@ -32,7 +32,7 @@ sbom = {
     "dataLicense": "CC0-1.0",
     "SPDXID": "SPDXRef-DOCUMENT",
     "name": f"codebase-memory-mcp-{version}",
-    "documentNamespace": f"https://github.com/DeusData/codebase-memory-mcp/releases/{version}",
+    "documentNamespace": f"https://github.com/Soumen-Developer/CodeBase-Memory/releases/{version}",
     "creationInfo": {
         "created": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "creators": ["Tool: codebase-memory-mcp-release-pipeline"],
@@ -50,7 +50,7 @@ sbom = {
         {"SPDXID": "SPDXRef-Package-verstable", "name": "verstable", "versionInfo": "2.2.1", "licenseDeclared": "MIT", "downloadLocation": "https://github.com/JacksonAllan/Verstable", "filesAnalyzed": False},
         {"SPDXID": "SPDXRef-Package-wyhash", "name": "wyhash", "versionInfo": "final-4.3", "licenseDeclared": "Unlicense", "downloadLocation": "https://github.com/wangyi-fudan/wyhash", "filesAnalyzed": False},
         {"SPDXID": "SPDXRef-Package-nomic-embed-code", "name": "nomic-embed-code-token-embeddings", "versionInfo": "1.0", "licenseDeclared": "Apache-2.0", "downloadLocation": "https://huggingface.co/nomic-ai/nomic-embed-code", "filesAnalyzed": False, "comment": "Derived int8 token embeddings; see vendored/nomic/NOTICE"},
-        {"SPDXID": "SPDXRef-Package-tree-sitter-grammars", "name": "tree-sitter-grammars-aggregate", "versionInfo": f"{n_grammars}-grammars", "licenseDeclared": "MIT", "downloadLocation": "NOASSERTION", "filesAnalyzed": False, "comment": f"Aggregate of {n_grammars} vendored tree-sitter grammars, compiled statically. Predominantly MIT; non-MIT families present include CC0-1.0 (clojure, fennel), Apache-2.0 (elixir, erlang, gleam, hcl, ini, jinja2, just, pkl, sway, wit), ISC (pine, templ), Unlicense (fish); first-party grammars (c) DeusData, MIT. This summary is non-exhaustive; the authoritative complete per-grammar license list is internal/cbm/vendored/grammars/MANIFEST.md, and full license texts ship in THIRD_PARTY_NOTICES.md inside each archive."},
+        {"SPDXID": "SPDXRef-Package-tree-sitter-grammars", "name": "tree-sitter-grammars-aggregate", "versionInfo": f"{n_grammars}-grammars", "licenseDeclared": "MIT", "downloadLocation": "NOASSERTION", "filesAnalyzed": False, "comment": f"Aggregate of {n_grammars} vendored tree-sitter grammars, compiled statically. Predominantly MIT; non-MIT families present include CC0-1.0 (clojure, fennel), Apache-2.0 (elixir, erlang, gleam, hcl, ini, jinja2, just, pkl, sway, wit), ISC (pine, templ), Unlicense (fish); first-party grammars (c) Soumen-Developer, MIT. This summary is non-exhaustive; the authoritative complete per-grammar license list is internal/cbm/vendored/grammars/MANIFEST.md, and full license texts ship in THIRD_PARTY_NOTICES.md inside each archive."},
     ],
 }
 json.dump(sbom, open("sbom.json", "w"), indent=2)

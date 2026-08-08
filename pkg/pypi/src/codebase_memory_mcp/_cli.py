@@ -19,7 +19,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-REPO = "DeusData/codebase-memory-mcp"
+REPO = "Soumen-Developer/CodeBase-Memory"
 _WINDOWS_BINARY_NAME = "codebase-memory-mcp.exe"
 _INTEGRATIONS_NAME = "cbm-integrations.json"
 _UI_PACK_RE = re.compile(r"cbm-ui-[0-9a-f]{64}\.pack\Z")
