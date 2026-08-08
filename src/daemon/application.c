@@ -1754,7 +1754,7 @@ static void application_update_publish_terminal_locked(cbm_daemon_application_t 
         (void)snprintf(application->update_notice, sizeof(application->update_notice),
                        "Update available: %s -> %s -- run: codebase-memory-mcp update  |  "
                        "Enjoying codebase-memory-mcp? Please leave a star: "
-                       "https://github.com/DeusData/codebase-memory-mcp",
+                       "https://github.com/Soumen-Developer/CodeBase-Memory",
                        cbm_cli_get_version(), latest_version);
         cbm_log_info("update.available", "current", cbm_cli_get_version(), "latest",
                      latest_version);

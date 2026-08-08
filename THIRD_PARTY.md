@@ -54,7 +54,7 @@ License summary:
   `pine` is **ISC** (declared by its upstream).
 - The grammars authored in-house for this project (`cobol`, `form`, `janet`,
   `magma`, `protobuf`, `wolfram`) are **MIT** under the project's own license,
-  (c) DeusData. Six further grammars (`assembly`, `cfml`, `cfscript`,
+  (c) Soumen-Developer. Six further grammars (`assembly`, `cfml`, `cfscript`,
   `dotenv`, `pine`, `qml`) are self-maintained forks that retain their
   original upstream authors' licenses — see the manifest for per-grammar
   provenance.

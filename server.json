@@ -1,13 +1,13 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.DeusData/codebase-memory-mcp",
+  "name": "io.github.Soumen-Developer/CodeBase-Memory",
   "title": "Codebase Memory",
   "description": "Codebase knowledge graph for AI agents \u2014 159 languages, sub-ms queries, 99% fewer tokens.",
   "repository": {
-    "url": "https://github.com/DeusData/codebase-memory-mcp",
+    "url": "https://github.com/Soumen-Developer/CodeBase-Memory",
     "source": "github"
   },
-  "websiteUrl": "https://deusdata.github.io/codebase-memory-mcp/",
+  "websiteUrl": "https://soumen-developer.github.io/CodeBase-Memory/",
   "version": "0.8.1",
   "packages": [
     {

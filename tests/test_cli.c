@@ -1503,7 +1503,7 @@ TEST(cli_update_already_current_does_not_quiesce_sessions) {
         fake_curl,
         "#!/bin/sh\n"
         "printf '%s\\n' 'HTTP/1.1 302 Found' "
-        "'location: https://github.com/DeusData/codebase-memory-mcp/releases/tag/v0.0.0'\n");
+        "'location: https://github.com/Soumen-Developer/CodeBase-Memory/releases/tag/v0.0.0'\\n");
     bool fixture_ready = chmod(fake_curl, 0700) == 0;
     cbm_setenv("PATH", bin_dir, 1);
 
