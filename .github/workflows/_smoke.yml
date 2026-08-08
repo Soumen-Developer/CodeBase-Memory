@@ -341,7 +341,7 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE: 1
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew tap deusdata/codebase-memory-mcp "$GITHUB_WORKSPACE"
-          brew trust deusdata/codebase-memory-mcp
+          brew tap soumen-developer/codebase-memory-mcp "$GITHUB_WORKSPACE"
+          brew trust soumen-developer/codebase-memory-mcp
           brew install codebase-memory-mcp
           codebase-memory-mcp --version
