@@ -11,7 +11,7 @@ $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
 Add-Type -AssemblyName System.Net.Http
 
-$Repo = "DeusData/codebase-memory-mcp"
+$Repo = "Soumen-Developer/CodeBase-Memory"
 $InstallDir = "$env:LOCALAPPDATA\Programs\codebase-memory-mcp"
 $BinName = "codebase-memory-mcp.exe"
 $WindowsArchiveNames = @(

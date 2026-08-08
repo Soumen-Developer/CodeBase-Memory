@@ -19,8 +19,8 @@
 
 ## Links
 
-- Homepage: https://deusdata.github.io/codebase-memory-mcp/
-- Source code (GitHub): https://github.com/DeusData/codebase-memory-mcp
-- Latest release: https://github.com/DeusData/codebase-memory-mcp/releases/latest
-- Benchmark report: https://github.com/DeusData/codebase-memory-mcp/blob/main/docs/BENCHMARK.md
+- Homepage: https://soumen-developer.github.io/CodeBase-Memory/
+- Source code (GitHub): https://github.com/Soumen-Developer/CodeBase-Memory
+- Latest release: https://github.com/Soumen-Developer/CodeBase-Memory/releases/latest
+- Benchmark report: https://github.com/Soumen-Developer/CodeBase-Memory/blob/main/docs/BENCHMARK.md
 - Research paper: https://arxiv.org/abs/2603.27277
