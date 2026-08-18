@@ -81,6 +81,8 @@ Options: `--skip-config` (binary only, no agent setup), `--dir=<path>` (custom l
 
 Restart your coding agent. Say **"Index this project"** — done.
 
+> 📖 **Want a step-by-step guide with screenshots, troubleshooting, and Docker instructions?** See [SETUP-GUIDE.md](SETUP-GUIDE.md) — written for humans, not machines.
+
 <details>
 <summary>Manual install</summary>
 
