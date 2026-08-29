@@ -1,9 +1,9 @@
 # codebase-memory-mcp
 
 [![npm](https://img.shields.io/npm/v/codebase-memory-mcp?style=flat&color=blue)](https://www.npmjs.com/package/codebase-memory-mcp)
-[![GitHub Release](https://img.shields.io/github/v/release/DeusData/codebase-memory-mcp?style=flat&color=blue)](https://github.com/DeusData/codebase-memory-mcp/releases/latest)
-[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/DeusData/codebase-memory-mcp/blob/main/LICENSE)
-[![Platform](https://img.shields.io/badge/macOS_%7C_Linux_%7C_Windows-supported-lightgrey)](https://github.com/DeusData/codebase-memory-mcp/releases/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/Soumen-Developer/CodeBase-Memory?style=flat&color=blue)](https://github.com/Soumen-Developer/CodeBase-Memory/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/Soumen-Developer/CodeBase-Memory/blob/main/LICENSE)
+[![Platform](https://img.shields.io/badge/macOS_%7C_Linux_%7C_Windows-supported-lightgrey)](https://github.com/Soumen-Developer/CodeBase-Memory/releases/latest)
 
 **The fastest and most efficient code intelligence engine for AI coding agents.** Full-indexes an average repository in milliseconds, the Linux kernel (28M LOC, 75K files) in 3 minutes. Answers structural queries in under 1ms. This npm wrapper downloads, verifies, and caches the selected native runtime set: the executable, its authenticated integration asset, and—when requested—the content-addressed UI pack.
 
@@ -95,7 +95,7 @@ Benchmarked on Apple M3 Pro:
 
 ## Full Documentation
 
-See [github.com/DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) for the full README including all MCP tools, configuration options, graph data model, and language support details.
+See [github.com/Soumen-Developer/CodeBase-Memory](https://github.com/Soumen-Developer/CodeBase-Memory) for the full README including all MCP tools, configuration options, graph data model, and language support details.
 
 ## License
 
