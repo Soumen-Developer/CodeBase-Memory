@@ -31,19 +31,9 @@ Graph evidence depends on index generation, freshness, and exact path/scope cove
 
 ## Links
 
-- Homepage: https://deusdata.github.io/codebase-memory-mcp/
-- Source and feature reference: https://github.com/DeusData/codebase-memory-mcp
-- Latest release: https://github.com/DeusData/codebase-memory-mcp/releases/latest
-- Quick start and installation: https://github.com/DeusData/codebase-memory-mcp#quick-start
-- Documentation indexing: https://github.com/DeusData/codebase-memory-mcp#documentation-connected-to-code
-- Infrastructure and deployment: https://github.com/DeusData/codebase-memory-mcp#infrastructure-and-deployment
-- CBM Lens: https://github.com/DeusData/codebase-memory-mcp#cbm-lens-beta-code-visualization-and-source-navigation
-- Agent integrations: https://github.com/DeusData/codebase-memory-mcp#multi-agent-support
-- Smart CI guide: https://github.com/DeusData/codebase-memory-mcp/blob/main/docs/SMART_CI.md
-- Configuration: https://github.com/DeusData/codebase-memory-mcp/blob/main/docs/CONFIGURATION.md
-- MCP tools: https://github.com/DeusData/codebase-memory-mcp#mcp-tools
-- Token savings and evidence: https://deusdata.github.io/codebase-memory-mcp/#token-savings
-- Performance and research: https://github.com/DeusData/codebase-memory-mcp#performance
-- Benchmark report: https://github.com/DeusData/codebase-memory-mcp/blob/main/docs/BENCHMARK.md
+- Homepage: https://soumen-developer.github.io/CodeBase-Memory/
+- Source code (GitHub): https://github.com/Soumen-Developer/CodeBase-Memory
+- Latest release: https://github.com/Soumen-Developer/CodeBase-Memory/releases/latest
+- Benchmark report: https://github.com/Soumen-Developer/CodeBase-Memory/blob/main/docs/BENCHMARK.md
 - Research paper: https://arxiv.org/abs/2603.27277
 - Security and release verification: https://github.com/DeusData/codebase-memory-mcp#security
