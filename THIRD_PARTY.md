@@ -52,9 +52,10 @@ License summary:
 - `clojure` ([sogaiu/tree-sitter-clojure](https://github.com/sogaiu/tree-sitter-clojure)) is **CC0-1.0**;
   `fennel` is **CC0-1.0**; `jinja2` and `just` are **Apache-2.0**;
   `pine` is **ISC** (declared by its upstream).
+<<<<<<< HEAD
 - The grammars authored in-house for this project (`chialisp`, `cobol`, `form`,
   `janet`, `magma`, `protobuf`, `wolfram`) are **MIT** under the project's own
-  license, (c) DeusData. Each ships the repository's own LICENSE, byte-identical
+  license, (c) Soumen-Developer. Each ships the repository's own LICENSE, byte-identical
   to the root copy; they carry no third-party copyright because there is no
   third party. `chialisp` is a generic s-expression grammar for the Chia
   smart-coin language, written for this project because no usable public
@@ -67,7 +68,7 @@ License summary:
   [tree-sitter/tree-sitter-typescript](https://github.com/tree-sitter/tree-sitter-typescript)
   (MIT, (c) 2017 Max Brunsfeld; on the
   [tree-sitter-javascript](https://github.com/tree-sitter/tree-sitter-javascript)
-  base, MIT, (c) 2014 Max Brunsfeld) with (c) 2026 DeusData ArkTS additions;
+  base, MIT, (c) 2014 Max Brunsfeld) with (c) 2026 Soumen-Developer ArkTS additions;
   its grammar source lives in `tools/tree-sitter-arkts/`.
 
 ### tree-sitter-plsql
@@ -84,6 +85,14 @@ License summary:
   other vendored grammar, as documented in
   `internal/cbm/vendored/grammars/MANIFEST.md`. PL/SQL support was originally
   contributed in PR #1033 by Oğuz (@ouzsrcm).
+=======
+- The grammars authored in-house for this project (`cobol`, `form`, `janet`,
+  `magma`, `protobuf`, `wolfram`) are **MIT** under the project's own license,
+  (c) Soumen-Developer. Six further grammars (`assembly`, `cfml`, `cfscript`,
+  `dotenv`, `pine`, `qml`) are self-maintained forks that retain their
+  original upstream authors' licenses — see the manifest for per-grammar
+  provenance.
+>>>>>>> 62a4b99f (chore: restore local customizations after upstream sync)
 
 ### tree-sitter-objectscript (UDL + routine)
 
