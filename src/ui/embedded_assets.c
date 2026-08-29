@@ -5,24 +5,24 @@
 #include "ui/embedded_assets.h"
 #include <string.h>
 
-extern const unsigned char _binary_assets_index_D27RSPSK_css_data[];
-extern const unsigned int _binary_assets_index_D27RSPSK_css_size;
-extern const unsigned char _binary_assets_index_Dnf5jw6Y_js_data[];
-extern const unsigned int _binary_assets_index_Dnf5jw6Y_js_size;
+extern const unsigned char _binary_assets_index_BXrghOTN_css_data[];
+extern const unsigned int _binary_assets_index_BXrghOTN_css_size;
+extern const unsigned char _binary_assets_index_C0NfLB_A_js_data[];
+extern const unsigned int _binary_assets_index_C0NfLB_A_js_size;
 extern const unsigned char _binary_index_html_data[];
 extern const unsigned int _binary_index_html_size;
 
 cbm_embedded_file_t CBM_EMBEDDED_FILES[] = {
-    {"/assets/index-D27RSPSK.css", _binary_assets_index_D27RSPSK_css_data, 0, "text/css"},
-    {"/assets/index-Dnf5jw6Y.js", _binary_assets_index_Dnf5jw6Y_js_data, 0, "application/javascript"},
+    {"/assets/index-BXrghOTN.css", _binary_assets_index_BXrghOTN_css_data, 0, "text/css"},
+    {"/assets/index-C0NfLB-A.js", _binary_assets_index_C0NfLB_A_js_data, 0, "application/javascript"},
     {"/index.html", _binary_index_html_data, 0, "text/html"},
 };
 const int CBM_EMBEDDED_FILE_COUNT = 3;
 
 static void __attribute__((constructor)) init_embedded_sizes(void) {
     cbm_embedded_file_t *files = CBM_EMBEDDED_FILES;
-    files[0].size = _binary_assets_index_D27RSPSK_css_size;
-    files[1].size = _binary_assets_index_Dnf5jw6Y_js_size;
+    files[0].size = _binary_assets_index_BXrghOTN_css_size;
+    files[1].size = _binary_assets_index_C0NfLB_A_js_size;
     files[2].size = _binary_index_html_size;
 }
 
