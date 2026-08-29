@@ -9,53 +9,53 @@
 # approval for the matching path.
 
 # Default owner gate: every pull request crosses the project owner's desk.
-* @DeusData
+* @Soumen-Developer
 
 # Security-sensitive and authority-sensitive surfaces.
-/.github/ @DeusData
-/scripts/ @DeusData
-/Makefile.cbm @DeusData
-/SECURITY.md @DeusData
-/docs/SECURITY-DISCLOSURE.md @DeusData
-/CONTRIBUTING.md @DeusData
-/CODE_OF_CONDUCT.md @DeusData
-/DCO @DeusData
-/LICENSE @DeusData
-/MAINTAINERS.md @DeusData
+/.github/ @Soumen-Developer
+/scripts/ @Soumen-Developer
+/Makefile.cbm @Soumen-Developer
+/SECURITY.md @Soumen-Developer
+/docs/SECURITY-DISCLOSURE.md @Soumen-Developer
+/CONTRIBUTING.md @Soumen-Developer
+/CODE_OF_CONDUCT.md @Soumen-Developer
+/DCO @Soumen-Developer
+/LICENSE @Soumen-Developer
+/MAINTAINERS.md @Soumen-Developer
 
 # Release and distribution surfaces.
-/pkg/ @DeusData
-/install.sh @DeusData
-/install.ps1 @DeusData
-/server.json @DeusData
-/glama.json @DeusData
-/flake.nix @DeusData
-/flake.lock @DeusData
-/THIRD_PARTY.md @DeusData
-/vendored/ @DeusData
-/internal/cbm/vendored/ @DeusData
+/pkg/ @Soumen-Developer
+/install.sh @Soumen-Developer
+/install.ps1 @Soumen-Developer
+/server.json @Soumen-Developer
+/glama.json @Soumen-Developer
+/flake.nix @Soumen-Developer
+/flake.lock @Soumen-Developer
+/THIRD_PARTY.md @Soumen-Developer
+/vendored/ @Soumen-Developer
+/internal/cbm/vendored/ @Soumen-Developer
 
 # Core product surfaces.
-/src/foundation/ @DeusData
-/src/store/ @DeusData
-/src/cypher/ @DeusData
-/src/graph_buffer/ @DeusData
-/src/mcp/ @DeusData
-/src/cli/ @DeusData
-/src/discover/ @DeusData
-/src/watcher/ @DeusData
-/src/pipeline/ @DeusData
-/src/git/ @DeusData
-/src/semantic/ @DeusData
-/src/simhash/ @DeusData
-/src/traces/ @DeusData
-/src/ui/ @DeusData
+/src/foundation/ @Soumen-Developer
+/src/store/ @Soumen-Developer
+/src/cypher/ @Soumen-Developer
+/src/graph_buffer/ @Soumen-Developer
+/src/mcp/ @Soumen-Developer
+/src/cli/ @Soumen-Developer
+/src/discover/ @Soumen-Developer
+/src/watcher/ @Soumen-Developer
+/src/pipeline/ @Soumen-Developer
+/src/git/ @Soumen-Developer
+/src/semantic/ @Soumen-Developer
+/src/simhash/ @Soumen-Developer
+/src/traces/ @Soumen-Developer
+/src/ui/ @Soumen-Developer
 
 # Extraction, language support, and graph UI.
-/internal/cbm/ @DeusData
-/tools/ @DeusData
-/graph-ui/ @DeusData
+/internal/cbm/ @Soumen-Developer
+/tools/ @Soumen-Developer
+/graph-ui/ @Soumen-Developer
 
 # Test and reproduction infrastructure.
-/tests/ @DeusData
-/test-infrastructure/ @DeusData
+/tests/ @Soumen-Developer
+/test-infrastructure/ @Soumen-Developer
