@@ -2,11 +2,29 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Codebase Memory — Interactive code graph visualization and exploration" />
+    <meta name="theme-color" content="#0a0a10" />
+    <meta property="og:title" content="Codebase Memory — Graph" />
+    <meta property="og:description" content="Interactive code graph visualization and exploration" />
+    <meta property="og:type" content="website" />
     <title>Codebase Memory — Graph</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
-  <body class="bg-[#0a0a10] text-[#e4e4ed] min-h-screen">
+  <body class="bg-[#0a0a10] text-[#e4e4ed] min-h-screen antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Fallback for non-JS environments -->
+    <noscript>
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a10;color:#e4e4ed;font-family:system-ui,sans-serif;padding:2rem;text-align:center;">
+        <div>
+          <div style="font-size:3rem;margin-bottom:1rem;">🧠</div>
+          <h1 style="font-size:1.5rem;margin-bottom:0.5rem;">Codebase Memory</h1>
+          <p style="color:#888;max-width:400px;margin:0 auto;">This application requires JavaScript to run. Please enable JavaScript in your browser settings.</p>
+        </div>
+      </div>
+    </noscript>
   </body>
 </html>

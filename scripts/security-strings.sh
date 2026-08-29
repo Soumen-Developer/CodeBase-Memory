@@ -86,6 +86,9 @@ ALLOWED_URLS=(
     # them as homepage/documentation fields, and the graph UI links the docs.
     "https://github.com/DeusData"
     "https://deusdata.github.io/codebase-memory-mcp"
+    # Soumen-Developer fork branding URLs
+    "https://api.github.com/repos/Soumen-Developer/CodeBase-Memory"
+    "https://github.com/Soumen-Developer/CodeBase-Memory"
     "http://127.0.0.1"
     "http://localhost"
     # SQLite internal URLs (part of vendored sqlite3 strings)
