@@ -33,7 +33,7 @@ USER_="${CBM_VM_USER:-test}"
 HOST_KEY="${CBM_VM_HOST_KEY_SHA256:?set CBM_VM_HOST_KEY_SHA256 in ~/.claude/cbm-vm/config}"
 LOCAL_BRANCH="$(git -C "$ROOT" branch --show-current)"
 BRANCH="${CBM_VM_BRANCH:-${LOCAL_BRANCH:-main}}"
-REPO_URL="${CBM_VM_REPO:-https://github.com/DeusData/codebase-memory-mcp.git}"
+REPO_URL="${CBM_VM_REPO:-https://github.com/Soumen-Developer/CodeBase-Memory.git}"
 MSYS2_SFX_URL="https://github.com/msys2/msys2-installer/releases/download/2026-06-11/msys2-base-x86_64-20260611.sfx.exe"
 MSYS2_SFX_SHA256="c105946e64e08f099ac0e4647461ce762b95333ad211777666476a9a41451d65"
 
