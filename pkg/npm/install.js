@@ -11,7 +11,7 @@ const os = require('os');
 const { execFileSync } = require('child_process');
 const { pipeline } = require('stream');
 
-const REPO = 'DeusData/codebase-memory-mcp';
+const REPO = 'Soumen-Developer/CodeBase-Memory';
 const VERSION = require('./package.json').version;
 const BIN_DIR = path.join(__dirname, 'bin');
 const MAX_REDIRECTS = 5;
