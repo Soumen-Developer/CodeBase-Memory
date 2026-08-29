@@ -17,7 +17,7 @@ contents, environment variables, usage metrics, or telemetry.
 The MCP server has one best-effort external runtime check: after MCP
 `initialize`, it starts a background update-check thread that requests release
 metadata from
-`https://api.github.com/repos/DeusData/codebase-memory-mcp/releases/latest`.
+`https://api.github.com/repos/Soumen-Developer/CodeBase-Memory/releases/latest`.
 That request is used only to show an update notice when a newer release exists.
 It sends no project data; only standard HTTPS metadata, such as the destination
 host and the normal `curl` request headers, are visible to GitHub and the
@@ -56,7 +56,7 @@ can fix it before public disclosure:
 
 1. **Do NOT open a public issue, PR, or social-media post** for security
    vulnerabilities.
-2. **Preferred:** use GitHub's [private vulnerability reporting](https://github.com/DeusData/codebase-memory-mcp/security/advisories/new)
+2. **Preferred:** use GitHub's [private vulnerability reporting](https://github.com/Soumen-Developer/CodeBase-Memory/security/advisories/new)
    (the repository's **Security → Report a vulnerability** button). This keeps
    everything in one place and starts a private advisory automatically.
 3. **Alternative:** email martin.vogel.tech@gmail.com.
@@ -81,7 +81,7 @@ can fix it before public disclosure:
 
 We follow **coordinated disclosure**: fixes are developed privately, validated
 across all supported platforms, released, and only then disclosed publicly via a
-[GitHub Security Advisory](https://github.com/DeusData/codebase-memory-mcp/security/advisories)
+[GitHub Security Advisory](https://github.com/Soumen-Developer/CodeBase-Memory/security/advisories)
 with a **CVE** and credit to you. The full handling process — including how you
 can verify the fix before release — is documented in
 [`docs/SECURITY-DISCLOSURE.md`](docs/SECURITY-DISCLOSURE.md).
@@ -159,8 +159,8 @@ Users can independently verify any release archive and the runtime set it contai
 ```bash
 # SLSA Build Level 3 provenance for release archives
 gh attestation verify <downloaded-file> \
-  --repo DeusData/codebase-memory-mcp \
-  --signer-workflow DeusData/codebase-memory-mcp/.github/workflows/_build.yml
+  --repo Soumen-Developer/CodeBase-Memory \
+  --signer-workflow Soumen-Developer/CodeBase-Memory/.github/workflows/_build.yml
 
 # Sigstore cosign (keyless signature)
 cosign verify-blob --bundle <file>.bundle <file>

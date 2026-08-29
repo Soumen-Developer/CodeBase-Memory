@@ -11,7 +11,7 @@ Contributions are welcome. This guide covers setup, testing, and PR guidelines.
 **Contributor check prerequisites**: `scripts/test.sh` also requires `zip`, `python3`, and `curl`. `scripts/lint.sh` requires `cppcheck`, `clang-format`, and `clang-tidy`; `scripts/lint.sh --ci`, which is what CI runs, skips `clang-tidy`.
 
 ```bash
-git clone https://github.com/DeusData/codebase-memory-mcp.git
+git clone https://github.com/Soumen-Developer/CodeBase-Memory.git
 cd codebase-memory-mcp
 git config core.hooksPath scripts/hooks  # activates pre-commit security checks
 scripts/build.sh
@@ -181,7 +181,7 @@ If you add a new `system()`, `popen()`, `fork()`, or network call, it must be ju
 
 ## Good First Issues
 
-Check [issues labeled `good first issue`](https://github.com/DeusData/codebase-memory-mcp/labels/good%20first%20issue) for beginner-friendly tasks with clear scope and guidance.
+Check [issues labeled `good first issue`](https://github.com/Soumen-Developer/CodeBase-Memory/labels/good%20first%20issue) for beginner-friendly tasks with clear scope and guidance.
 
 ## License and sign-off (DCO) — required on every commit
 
