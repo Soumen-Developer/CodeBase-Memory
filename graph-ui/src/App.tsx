@@ -59,6 +59,12 @@ export function App() {
     };
   }, []);
 
+  /* Apply saved UI theme on mount */
+  useEffect(() => {
+    const theme = loadUITheme();
+    applyUITheme(theme);
+  }, []);
+
   /* Normalize the URL on first load so it always carries the current route. */
   useEffect(() => {
     const initial = readRoute();
