@@ -412,6 +412,15 @@ bool cbm_weak_member_unique_name_exempt(bool is_python, bool receiver_is_self_at
 bool cbm_suppress_weak_local_binding_call(bool enabled, bool callee_is_locally_bound,
                                           const char *strategy);
 
+/* Go analog of the TS/JS guard, same failure class: a selector call whose
+ * receiver the Go LSP could not type must not be bound by a receiver-blind
+ * short-name strategy. Drops suffix_match / fuzzy always, and unique_name only
+ * when its confidence is import-unreachability-penalized (the stdlib/vendor
+ * hijack shape). field_type_hint is deliberately NOT dropped for Go — struct
+ * fields carry declared types, so the hint is receiver-aware there. */
+bool cbm_go_suppress_weak_method_match(bool is_go, bool is_method, const char *strategy,
+                                       double confidence);
+
 /* Import-binding counterpart (#2127). True when the callee's root identifier
  * is bound by an import of this file whose module chain contradicts the
  * resolved target (`from unittest.mock import patch; patch()` must not bind a
@@ -495,6 +504,8 @@ const char *cbm_registry_value_target(const cbm_registry_t *r, const char *qn);
  * Caller does NOT free the array (owned by registry). */
 int cbm_registry_find_by_name(const cbm_registry_t *r, const char *name, const char ***out,
                               int *count);
+
+bool cbm_registry_has_type_named(const cbm_registry_t *r, const char *name);
 
 /* Return total number of entries. */
 int cbm_registry_size(const cbm_registry_t *r);

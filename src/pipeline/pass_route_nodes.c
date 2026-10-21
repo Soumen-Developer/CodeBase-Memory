@@ -33,7 +33,9 @@ enum {
 #include <stdint.h>
 #include "graph_buffer/graph_buffer.h"
 #include "foundation/log.h"
-#include "service_patterns.h" /* cbm_service_pattern_is_http_route_literal */
+#include "service_patterns.h"  /* cbm_service_pattern_is_http_route_literal */
+#include "helpers.h"           /* cbm_is_test_file */
+#include "discover/discover.h" /* cbm_language_for_filename */
 
 #include <stdio.h>
 #include <string.h>
@@ -707,13 +709,50 @@ static bool http_call_edge_has_valid_route(const cbm_gbuf_edge_t *edge) {
     return cbm_service_pattern_is_http_route_literal(url, callee);
 }
 
+/* try_create_data_flow's refusal for a pair across the test-file boundary. */
+enum { RN_FLOW_TEST_SCOPED = -2 };
+
+/* Is this node defined in a test file, by the extraction's own per-language rule? */
+static bool node_in_test_file(const cbm_gbuf_node_t *n) {
+    if (!n || !n->file_path || !n->file_path[0]) {
+        return false;
+    }
+    const char *slash = strrchr(n->file_path, '/');
+    const char *base = slash ? slash + SKIP_ONE : n->file_path;
+    return cbm_is_test_file(n->file_path, cbm_language_for_filename(base));
+}
+
+/* R1 + R2 (user decision, 2026-10-18): a handler defined in a test file pairs only with
+ * callers in that same file, and a caller in a test file pairs only with handlers in that same
+ * file. A test's request to the application, a production caller matched to a test's mock
+ * server, and two tests' private mock servers pairing across files are not data flows of the
+ * application. The HTTP_CALLS / HANDLES edges themselves stay; only the pairing is scoped. */
+static bool data_flow_crosses_test_scope(const cbm_gbuf_t *gb, int64_t caller_id,
+                                         int64_t handler_id) {
+    const cbm_gbuf_node_t *caller = cbm_gbuf_find_by_id(gb, caller_id);
+    const cbm_gbuf_node_t *handler = cbm_gbuf_find_by_id(gb, handler_id);
+    if (!caller || !handler) {
+        return false;
+    }
+    const char *cf = caller->file_path ? caller->file_path : "";
+    const char *hf = handler->file_path ? handler->file_path : "";
+    if (strcmp(cf, hf) == 0) {
+        return false;
+    }
+    return node_in_test_file(caller) || node_in_test_file(handler);
+}
+
 /* Try to create a DATA_FLOWS edge between caller and handler via a route.
- * Returns: 1=created, 0=skipped (self/duplicate), -1=skipped (has direct call). */
+ * Returns: 1=created, 0=skipped (self/duplicate), -1=skipped (has direct call),
+ * RN_FLOW_TEST_SCOPED=skipped (the pair crosses the test-file boundary, R1 + R2). */
 static int try_create_data_flow(cbm_gbuf_t *gb, int64_t caller_id, int64_t handler_id,
                                 const cbm_gbuf_node_t *route, const char *edge_type,
                                 const char *caller_props, bool via_infra) {
     if (caller_id == handler_id) {
         return 0;
+    }
+    if (data_flow_crosses_test_scope(gb, caller_id, handler_id)) {
+        return RN_FLOW_TEST_SCOPED;
     }
     if (has_direct_call(gb, caller_id, handler_id)) {
         return CBM_NOT_FOUND;
@@ -776,7 +815,14 @@ typedef struct {
     int infra_count;
     int flows;
     int skipped;
+    int test_scoped;
 } route_flows_t;
+
+typedef struct {
+    int flows;
+    int skipped;     /* the caller already CALLS the handler */
+    int test_scoped; /* the pair crosses the test-file boundary (R1 + R2) */
+} data_flow_stats_t;
 
 static void route_flow_add(route_flows_t *rf, const cbm_gbuf_edge_t *caller, int64_t handler_id,
                            const char *edge_type, bool via_infra) {
@@ -784,6 +830,8 @@ static void route_flow_add(route_flows_t *rf, const cbm_gbuf_edge_t *caller, int
                                   caller->properties_json, via_infra);
     if (rc > 0) {
         rf->flows++;
+    } else if (rc == RN_FLOW_TEST_SCOPED) {
+        rf->test_scoped++;
     } else if (rc < 0) {
         rf->skipped++;
     }
@@ -816,8 +864,8 @@ static void caller_data_flows(route_flows_t *rf, const cbm_gbuf_edge_t *caller,
  * is now the full caller x handler product. A (caller, handler) pair reached twice -- through two
  * routes, or directly and via infra -- keeps the order-free property winner of
  * cbm_gbuf_insert_edge. */
-static void create_route_data_flows(cbm_gbuf_t *gb, const cbm_gbuf_node_t *route, int *flows,
-                                    int *skipped) {
+static void create_route_data_flows(cbm_gbuf_t *gb, const cbm_gbuf_node_t *route,
+                                    data_flow_stats_t *st) {
     route_flows_t rf = {.gb = gb, .route = route};
     cbm_gbuf_find_edges_by_target_type(gb, route->id, "HANDLES", &rf.handles, &rf.handles_count);
     cbm_gbuf_find_edges_by_source_type(gb, route->id, "INFRA_MAPS", &rf.infra, &rf.infra_count);
@@ -836,8 +884,9 @@ static void create_route_data_flows(cbm_gbuf_t *gb, const cbm_gbuf_node_t *route
     for (int i = 0; i < async_count; i++) {
         caller_data_flows(&rf, async_edges[i], "ASYNC_CALLS");
     }
-    *flows += rf.flows;
-    *skipped += rf.skipped;
+    st->flows += rf.flows;
+    st->skipped += rf.skipped;
+    st->test_scoped += rf.test_scoped;
 }
 
 /* Find the enclosing proto service for a function by file + line range. */
@@ -940,19 +989,21 @@ static void create_data_flows(cbm_gbuf_t *gb) {
         return;
     }
 
-    int flows = 0;
-    int skipped = 0;
+    data_flow_stats_t st = {0};
 
     for (int ri = 0; ri < route_count; ri++) {
-        create_route_data_flows(gb, routes[ri], &flows, &skipped);
+        create_route_data_flows(gb, routes[ri], &st);
     }
 
-    if (flows > 0 || skipped > 0) {
+    if (st.flows > 0 || st.skipped > 0 || st.test_scoped > 0) {
         char buf1[CBM_SZ_16];
         char buf2[CBM_SZ_16];
-        snprintf(buf1, sizeof(buf1), "%d", flows);
-        snprintf(buf2, sizeof(buf2), "%d", skipped);
-        cbm_log_info("pass.data_flows", "created", buf1, "skipped_has_call", buf2);
+        char buf3[CBM_SZ_16];
+        snprintf(buf1, sizeof(buf1), "%d", st.flows);
+        snprintf(buf2, sizeof(buf2), "%d", st.skipped);
+        snprintf(buf3, sizeof(buf3), "%d", st.test_scoped);
+        cbm_log_info("pass.data_flows", "created", buf1, "skipped_has_call", buf2,
+                     "skipped_test_scope", buf3);
     }
 }
 

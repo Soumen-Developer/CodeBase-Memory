@@ -1673,7 +1673,58 @@ TEST(weak_call_guards_share_one_drop_list) {
                    strategies[i], member, binding);
         }
         ASSERT_EQ(member, binding);
+        /* The Go selector guard builds on the same list. At a penalized
+         * confidence (0.75 * 0.5) it agrees with it exactly; its one narrowing
+         * (an unpenalized unique_name) does not apply here. Any drift from
+         * the shared list fails here. */
+        bool go = cbm_go_suppress_weak_method_match(true, true, strategies[i], 0.375);
+        bool go_expected = member;
+        if (go != go_expected) {
+            printf("  Go drop-list divergence on strategy \"%s\": go=%d expected=%d\n",
+                   strategies[i], go, go_expected);
+        }
+        ASSERT_EQ(go, go_expected);
     }
+    PASS();
+}
+
+TEST(go_suppress_drops_weak_selector_matches) {
+    /* Go selector call with an untyped receiver, landed via a receiver-blind
+     * short-name strategy → drop (same failure class as #592/#606).
+     * suffix_match/fuzzy drop at any confidence; unique_name drops only when
+     * import-unreachability-penalized (CONF_UNIQUE_NAME 0.75 * 0.5 = 0.375 —
+     * the `io.Copy` -> project `Copy` stdlib-hijack shape). */
+    ASSERT_TRUE(cbm_go_suppress_weak_method_match(true, true, "suffix_match", 0.9));
+    ASSERT_TRUE(cbm_go_suppress_weak_method_match(true, true, "suffix_match", 0.11));
+    ASSERT_TRUE(cbm_go_suppress_weak_method_match(true, true, "fuzzy", 0.9));
+    ASSERT_TRUE(cbm_go_suppress_weak_method_match(true, true, "unique_name", 0.375));
+    /* field_type_hint is a receiver-NAME substring match, not type evidence
+     * (F-G9): weak for Go like the shared list. */
+    ASSERT_TRUE(cbm_go_suppress_weak_method_match(true, true, "field_type_hint", 0.85));
+    PASS();
+}
+
+TEST(go_suppress_keeps_typed_and_import_aware_matches) {
+    /* Unpenalized unique_name = lone candidate inside the caller's import
+     * closure (or an import-free file, e.g. same-package) — a genuinely-typed
+     * lone-candidate call never enters the field-type-hint upgrade, so it must
+     * survive (lrp_go_s8_field_type_hint). */
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "unique_name", 0.75));
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "same_module", 0.9));
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "import_map", 0.95));
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "import_map_suffix", 0.9));
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "qualified_suffix", 0.9));
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "callee_suffix", 0.5));
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "service_pattern", 0.5));
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "lsp_strategy_cross_file", 0.92));
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "lsp_direct", 0.95));
+    /* A bare call (is_method=false) is a free-function call → never suppressed. */
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, false, "suffix_match", 0.11));
+    /* Non-Go languages are never affected by this gate. */
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(false, true, "suffix_match", 0.11));
+    /* No match (NULL/empty strategy) → nothing to suppress. */
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, NULL, 0.5));
+    ASSERT_FALSE(cbm_go_suppress_weak_method_match(true, true, "", 0.5));
     PASS();
 }
 
@@ -2235,6 +2286,8 @@ SUITE(registry) {
     RUN_TEST(python_import_binding_contradicts_only_foreign_chains);
     RUN_TEST(python_external_base_contradicts_django_shapes);
     RUN_TEST(weak_call_guards_share_one_drop_list);
+    RUN_TEST(go_suppress_drops_weak_selector_matches);
+    RUN_TEST(go_suppress_keeps_typed_and_import_aware_matches);
     RUN_TEST(registry_python_function_local_is_exact_only_issue1548);
     RUN_TEST(registry_resolve_lexical_walks_enclosing_defs_issue1548);
     RUN_TEST(registry_python_local_bound_at_own_file_issue1548);

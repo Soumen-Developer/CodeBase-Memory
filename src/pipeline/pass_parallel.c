@@ -3348,7 +3348,15 @@ static void resolve_file_calls(resolve_ctx_t *rc, resolve_worker_state_t *ws, CB
         }
 
         _rc_t0 = extract_now_ns();
-        try_field_type_hint(rc, &res, call->callee_name, source_node->id);
+        /* Not for Go (F-G9): the hint matches the capitalized receiver
+         * VARIABLE name as a substring of a candidate QN (`t.Run` -> any
+         * `...T...Run`), with no type evidence. The sequential resolver has no
+         * such step, so for Go it produced parallel-only edges (par/seq CALLS
+         * diverged), and the Go selector guard could not see them as the weak
+         * pick they are. SCIP precision of Go field_type_hint: 0.016. */
+        if (lang != CBM_LANG_GO) {
+            try_field_type_hint(rc, &res, call->callee_name, source_node->id);
+        }
         /* Cross-language veto — the same predicate as pass_calls.c, applied
          * AFTER the field-type hint so the hint may still re-pick a compatible
          * candidate first, and BEFORE the empty-resolution fallbacks below so a
@@ -3385,7 +3393,9 @@ static void resolve_file_calls(resolve_ctx_t *rc, resolve_worker_state_t *ws, CB
          * #606 direction.
          *
          * This language set MUST match the one in pass_calls.c exactly — see the
-         * note there. ArkTS belongs to the JS/TS family (#1842). */
+         * note there. ArkTS belongs to the JS/TS family (#1842). Go (#1906)
+         * composes via its own predicate (different drop-list — see
+         * cbm_go_suppress_weak_method_match), mirrored in pass_calls.c. */
         bool suppress_weak_member = lang == CBM_LANG_PYTHON || lang == CBM_LANG_JAVASCRIPT ||
                                     lang == CBM_LANG_TYPESCRIPT || lang == CBM_LANG_TSX ||
                                     lang == CBM_LANG_ARKTS ||
@@ -3403,13 +3413,18 @@ static void resolve_file_calls(resolve_ctx_t *rc, resolve_worker_state_t *ws, CB
                                                  call->callee_name, res.strategy)) ||
             cbm_suppress_weak_local_binding_call(suppress_weak_local_binding,
                                                  call->callee_is_locally_bound, res.strategy) ||
+            cbm_go_suppress_weak_method_match(lang == CBM_LANG_GO, call->is_method, res.strategy,
+                                              res.confidence) ||
             /* Import-binding suppression (#2127) — see pass_calls.c; this gate
              * MUST stay identical to the one there. */
             (lang == CBM_LANG_PYTHON &&
              cbm_suppress_weak_import_bound_call(true, true, res.strategy) &&
              cbm_python_import_binding_contradicts(&result->imports, call->callee_name,
                                                    res.qualified_name, rc->main_gbuf,
-                                                   rc->project_name, rel));
+                                                   rc->project_name, rel)) ||
+            /* MUST match pass_calls.c exactly. */
+            (lang == CBM_LANG_PHP && cbm_suppress_weak_member_match(true, true, res.strategy) &&
+             cbm_pipeline_php_receiver_type_unindexed(&result->resolved_calls, call, rc->registry));
 
         /* Service-pattern HTTP/ASYNC client call (`requests.get(url)`): the
          * service signal lives in the callee_name. The registry can mis-resolve

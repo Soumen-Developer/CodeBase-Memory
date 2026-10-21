@@ -879,6 +879,7 @@ typedef struct {
     bool destructive;
     bool idempotent;
     bool open_world;
+    bool load_upfront;
 } tool_annotation_def_t;
 
 /* Tool annotations are deliberately explicit. All tools operate on the local
@@ -894,25 +895,32 @@ typedef struct {
  * Only handlers that write user-visible state -- index_repository, manage_adr,
  * delete_project, ingest_traces -- may clear readOnlyHint. Trace ingestion
  * accumulates observation counts on retries and can evict old runs, so it is
- * neither read-only nor idempotent and must advertise destructive effects. */
+ * neither read-only nor idempotent and must advertise destructive effects.
+ *
+ * load_upfront marks the structural discovery path (search_graph ->
+ * trace_path -> get_code_snippet). Claude Code defers every MCP tool behind
+ * ToolSearch by default, so an agent deciding how to answer sees Grep and Read
+ * but not the graph; `_meta["anthropic/alwaysLoad"]` asks it to load these
+ * three schemas upfront (about 4.6K characters) while the rest stay deferred.
+ * Clients that do not know the key ignore it, as MCP reserves `_meta`. */
 static const tool_annotation_def_t TOOL_ANNOTATIONS[] = {
-    {"index_repository", false, false, true, false},
-    {"search_graph", true, false, true, false},
-    {"query_graph", true, false, true, false},
-    {"trace_path", true, false, true, false},
-    {"get_code_snippet", true, false, true, false},
-    {"get_file_outline", true, false, true, false},
-    {"get_graph_schema", true, false, true, false},
-    {"compare_graphs", true, false, true, false},
-    {"get_architecture", true, false, true, false},
-    {"search_code", true, false, true, false},
-    {"list_projects", true, false, true, false},
-    {"delete_project", false, true, true, false},
-    {"index_status", true, false, true, false},
-    {"check_index_coverage", true, false, true, false},
-    {"detect_changes", true, false, true, false},
-    {"manage_adr", false, true, false, false},
-    {"ingest_traces", false, true, false, false},
+    {"index_repository", false, false, true, false, false},
+    {"search_graph", true, false, true, false, true},
+    {"query_graph", true, false, true, false, false},
+    {"trace_path", true, false, true, false, true},
+    {"get_code_snippet", true, false, true, false, true},
+    {"get_file_outline", true, false, true, false, false},
+    {"get_graph_schema", true, false, true, false, false},
+    {"compare_graphs", true, false, true, false, false},
+    {"get_architecture", true, false, true, false, false},
+    {"search_code", true, false, true, false, false},
+    {"list_projects", true, false, true, false, false},
+    {"delete_project", false, true, true, false, false},
+    {"index_status", true, false, true, false, false},
+    {"check_index_coverage", true, false, true, false, false},
+    {"detect_changes", true, false, true, false, false},
+    {"manage_adr", false, true, false, false, false},
+    {"ingest_traces", false, true, false, false, false},
 };
 
 static const tool_annotation_def_t *mcp_tool_annotations(const char *name) {
@@ -961,6 +969,12 @@ static void mcp_add_tool_def(yyjson_mut_doc *doc, yyjson_mut_val *tools, int i) 
     yyjson_mut_obj_add_bool(doc, annotations, "idempotentHint", def ? def->idempotent : false);
     yyjson_mut_obj_add_bool(doc, annotations, "openWorldHint", def ? def->open_world : true);
     yyjson_mut_obj_add_val(doc, tool, "annotations", annotations);
+
+    if (def && def->load_upfront) {
+        yyjson_mut_val *meta = yyjson_mut_obj(doc);
+        yyjson_mut_obj_add_bool(doc, meta, "anthropic/alwaysLoad", true);
+        yyjson_mut_obj_add_val(doc, tool, "_meta", meta);
+    }
 
     yyjson_mut_arr_add_val(tools, tool);
 }
@@ -1439,21 +1453,42 @@ static const char *SUPPORTED_PROTOCOL_VERSIONS[] = {
 static const int SUPPORTED_VERSION_COUNT =
     (int)(sizeof(SUPPORTED_PROTOCOL_VERSIONS) / sizeof(SUPPORTED_PROTOCOL_VERSIONS[0]));
 
+/* With tool search (Claude Code's default, Codex's too) the model sees only tool
+ * names plus these instructions until it searches, and Codex shows them as the
+ * server's namespace description. So they state, keywords first, which
+ * questions the graph answers; facts, not commands. Claude Code cuts them at
+ * 4,096 characters. */
 static const char MCP_SERVER_INSTRUCTIONS[] =
-    "Graph first: search_graph for symbols, trace_path for relationships, get_code_snippet for "
-    "source, query_graph for multi-hop, and get_architecture for overview. Use search_code/grep "
-    "for literals or coverage gaps. The session project's index auto-refreshes; re-index others. "
-    "Check cited-path coverage; paginate.";
+    "codebase-memory-mcp is a code knowledge graph of the indexed repository: functions, "
+    "classes, methods, routes, calls, imports, inheritance and cross-service links. It answers "
+    "structural code questions: where a symbol is defined, who calls a function, what a function "
+    "calls, call chains and data flow, which code a change affects, which handler serves a route, "
+    "and how modules fit together. search_graph finds symbols by name or pattern; trace_path "
+    "follows callers, callees and data flow; get_code_snippet returns a symbol's exact source; "
+    "query_graph runs multi-hop Cypher queries; get_architecture summarizes structure; "
+    "detect_changes maps the current diff to affected symbols. Grep and file reads fit literal "
+    "text, config values, comments and non-code files better; search_code combines text search "
+    "with graph context. The session project's index refreshes automatically; other projects "
+    "need index_repository. check_index_coverage tells whether a cited file was fully indexed. "
+    "Results are paginated.";
 
 static const char MCP_ANALYSIS_SERVER_INSTRUCTIONS[] =
-    "analysis tool profile: read-only graph work via search_graph, trace_path, "
-    "get_code_snippet, query_graph, get_architecture, or search_code. Use check_index_coverage "
-    "for cited paths; paginate.";
+    "analysis tool profile (read-only): a code knowledge graph of the indexed repository for "
+    "structural questions: where a symbol is defined, who calls a function, what it calls, call "
+    "chains and data flow, which code a change affects, how modules fit together. search_graph "
+    "finds symbols; trace_path follows callers, callees and data flow; get_code_snippet returns "
+    "exact source; query_graph runs multi-hop Cypher; get_architecture summarizes structure; "
+    "search_code combines text search with graph context; detect_changes maps the current diff "
+    "to affected symbols. check_index_coverage tells whether a cited file was fully indexed. "
+    "Results are paginated.";
 
 static const char MCP_SCOUT_SERVER_INSTRUCTIONS[] =
-    "scout tool profile: fast positive discovery via search_graph, trace_path, "
-    "get_code_snippet, or get_architecture with narrow limits. Use check_index_coverage for "
-    "cited paths. Findings are provisional.";
+    "scout tool profile (fast, provisional): quick structural lookups in the indexed "
+    "repository: where a symbol is defined, who calls a function, what it calls. search_graph "
+    "finds symbols; trace_path follows callers and callees; get_code_snippet returns exact "
+    "source; get_architecture summarizes structure; narrow limits keep answers fast. "
+    "check_index_coverage tells whether a cited file was fully indexed. Findings are "
+    "provisional.";
 
 static char *cbm_mcp_initialize_response_for_profile(const char *params_json,
                                                      cbm_mcp_tool_profile_t profile) {
@@ -20994,7 +21029,9 @@ char *cbm_mcp_server_handle(cbm_mcp_server_t *srv, const char *line) {
         cbm_clock_gettime(CLOCK_MONOTONIC, &t1);
         long long dur_us = ((long long)(t1.tv_sec - req_t0.tv_sec) * MCP_S_TO_US) +
                            ((long long)(t1.tv_nsec - req_t0.tv_nsec) / MCP_MS_TO_US);
-        cbm_log_mcp_request(req.method, NULL, true, dur_us);
+        /* server/discover is the modern connect probe. -32601 stays so the
+         * client falls back to initialize; that miss is not an error (#2433). */
+        cbm_log_mcp_request(req.method, NULL, strcmp(req.method, "server/discover") != 0, dur_us);
         cbm_mcp_server_request_scope_end(srv);
         cbm_jsonrpc_request_free(&req);
         return err;

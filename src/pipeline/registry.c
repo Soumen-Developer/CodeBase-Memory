@@ -750,6 +750,35 @@ bool cbm_suppress_weak_local_binding_call(bool enabled, bool callee_is_locally_b
     return weak_short_name_strategy(strategy);
 }
 
+bool cbm_go_suppress_weak_method_match(bool is_go, bool is_method, const char *strategy,
+                                       double confidence) {
+    /* Go analog of the TS/JS guard above, same failure class: a selector call
+     * whose receiver the Go LSP could not type reaches the registry and a bare
+     * short-name strategy binds it to an arbitrary same-named project symbol
+     * (`f.Close()` on an os.File -> a project `Close`, suffix_match over 15
+     * candidates). Built on the shared drop-list so "weak" means one thing
+     * for every guard; Go narrows it in one place only (unique_name below).
+     * field_type_hint stays weak: it is a receiver-NAME substring match, not
+     * a declared-type lookup (the parallel resolver no longer produces it for
+     * Go; a typed field call such as lrp_go_s8's `s.repo.Find()` resolves
+     * through the Go LSP). */
+    if (!is_go || !is_method || !weak_short_name_strategy(strategy)) {
+        return false;
+    }
+    if (strcmp(strategy, "unique_name") != 0) {
+        return true; /* suffix_match, field_type_hint, fuzzy */
+    }
+    /* unique_name is dropped only when PENALIZED: resolve_name_lookup scales
+     * CONF_UNIQUE_NAME by DEFAULT_CONFIDENCE exactly when the lone candidate
+     * is not reachable through the caller's imports — the stdlib/vendor
+     * hijack shape (`io.Copy` -> a project `Copy`). An unpenalized
+     * unique_name target sits inside the caller's import closure (or the
+     * file has no imports, e.g. a same-package call) and must be kept —
+     * dropping it kills genuinely-typed lone-candidate calls that never
+     * enter the field-type-hint upgrade (candidate_count == 1). */
+    return confidence < CONF_UNIQUE_NAME;
+}
+
 /* Import-binding counterpart of the parameter guard above (#2127). An import
  * binds the identifier for the whole module; when that import is external it
  * never materializes, and the chain falls through to project-wide short-name
@@ -1465,6 +1494,21 @@ const char *cbm_registry_unique_field_qn(const cbm_registry_t *r, const char *me
         only = qns[i];
     }
     return only;
+}
+
+bool cbm_registry_has_type_named(const cbm_registry_t *r, const char *name) {
+    if (!r || !name || !name[0]) {
+        return false;
+    }
+    const char **qns = NULL;
+    int count = 0;
+    cbm_registry_find_by_name(r, name, &qns, &count);
+    for (int i = 0; i < count; i++) {
+        if (cbm_label_is_type_like(cbm_registry_label_of(r, qns[i]))) {
+            return true;
+        }
+    }
+    return false;
 }
 
 int cbm_registry_size(const cbm_registry_t *r) {

@@ -477,6 +477,78 @@ TEST(infrascan_data_flows_reach_every_infra_handler) {
     PASS();
 }
 
+/* R1 + R2 (user decision, 2026-10-18): a caller in a test file pairs only with handlers in that same
+ * file, and a handler in a test file pairs only with callers in that same file. A test's request to
+ * the application, a production caller matched to a test's mock server, and the private mock servers
+ * of two tests pairing across files are not data flows of the application. */
+static int64_t r12_fn(cbm_gbuf_t *gb, const char *name, const char *file) {
+    char qn[96];
+    snprintf(qn, sizeof(qn), "test.%s", name);
+    return cbm_gbuf_upsert_node(gb, "Function", name, qn, file, 1, 3, "{}");
+}
+
+static int64_t r12_route(cbm_gbuf_t *gb, const char *path) {
+    char qn[128];
+    snprintf(qn, sizeof(qn), "__route__GET__%s", path);
+    return cbm_gbuf_upsert_node(gb, "Route", path, qn, "", 0, 0, "{\"method\":\"GET\"}");
+}
+
+static void r12_call(cbm_gbuf_t *gb, int64_t caller, int64_t route, const char *path) {
+    char props[160];
+    snprintf(props, sizeof(props),
+             "{\"callee\":\"requests.get\",\"url_path\":\"%s\",\"method\":\"GET\"}", path);
+    cbm_gbuf_insert_edge(gb, caller, route, "HTTP_CALLS", props);
+}
+
+TEST(infrascan_data_flows_test_callers_pair_only_within_their_file) {
+    cbm_gbuf_t *gb = cbm_gbuf_new("test", "/tmp/cbm_infrascan_r12_callers");
+    ASSERT_NOT_NULL(gb);
+    int64_t route = r12_route(gb, "/api/orders");
+    int64_t handler = r12_fn(gb, "list_orders", "app/views.py");
+    cbm_gbuf_insert_edge(gb, handler, route, "HANDLES", "{}");
+    /* Test files by each language's own rule: a tests/ directory, a Java *Test.java, a TS .spec.ts. */
+    int64_t py_test = r12_fn(gb, "test_list_orders", "tests/test_orders.py");
+    int64_t java_test = r12_fn(gb, "listsOrders", "app/OrderServiceTest.java");
+    int64_t ts_spec = r12_fn(gb, "fetchesOrders", "web/orders.spec.ts");
+    int64_t prod = r12_fn(gb, "load_orders", "app/client.py");
+    r12_call(gb, py_test, route, "/api/orders");
+    r12_call(gb, java_test, route, "/api/orders");
+    r12_call(gb, ts_spec, route, "/api/orders");
+    r12_call(gb, prod, route, "/api/orders");
+    cbm_pipeline_create_route_nodes(gb);
+    ASSERT_FALSE(has_data_flow(gb, py_test, handler));
+    ASSERT_FALSE(has_data_flow(gb, java_test, handler));
+    ASSERT_FALSE(has_data_flow(gb, ts_spec, handler));
+    /* Control: the production caller keeps its flow. */
+    ASSERT_TRUE(has_data_flow(gb, prod, handler));
+    cbm_gbuf_free(gb);
+    PASS();
+}
+
+TEST(infrascan_data_flows_test_handlers_pair_only_within_their_file) {
+    cbm_gbuf_t *gb = cbm_gbuf_new("test", "/tmp/cbm_infrascan_r12_handlers");
+    ASSERT_NOT_NULL(gb);
+    int64_t route = r12_route(gb, "/api/s3");
+    /* Two tests each run their own mock server on the same path. */
+    int64_t mock_a = r12_fn(gb, "mock_s3_a", "tests/test_upload.py");
+    int64_t mock_b = r12_fn(gb, "mock_s3_b", "tests/conftest.py");
+    cbm_gbuf_insert_edge(gb, mock_a, route, "HANDLES", "{}");
+    cbm_gbuf_insert_edge(gb, mock_b, route, "HANDLES", "{}");
+    int64_t prod = r12_fn(gb, "upload", "app/storage.py");
+    int64_t test_a = r12_fn(gb, "test_upload", "tests/test_upload.py");
+    r12_call(gb, prod, route, "/api/s3");
+    r12_call(gb, test_a, route, "/api/s3");
+    cbm_pipeline_create_route_nodes(gb);
+    /* A production caller never reaches a test's mock server. */
+    ASSERT_FALSE(has_data_flow(gb, prod, mock_a));
+    ASSERT_FALSE(has_data_flow(gb, prod, mock_b));
+    /* A test reaches its own file's mock server, not another test file's. */
+    ASSERT_TRUE(has_data_flow(gb, test_a, mock_a));
+    ASSERT_FALSE(has_data_flow(gb, test_a, mock_b));
+    cbm_gbuf_free(gb);
+    PASS();
+}
+
 SUITE(infrascan) {
     RUN_TEST(infrascan_http_route_literal_guard_rejects_filesystem_paths);
     RUN_TEST(infrascan_http_route_literal_guard_rejects_document_extensions);
@@ -488,4 +560,6 @@ SUITE(infrascan) {
     RUN_TEST(infrascan_data_flows_link_every_caller_of_a_route);
     RUN_TEST(infrascan_data_flows_do_not_depend_on_caller_insertion_order);
     RUN_TEST(infrascan_data_flows_reach_every_infra_handler);
+    RUN_TEST(infrascan_data_flows_test_callers_pair_only_within_their_file);
+    RUN_TEST(infrascan_data_flows_test_handlers_pair_only_within_their_file);
 }

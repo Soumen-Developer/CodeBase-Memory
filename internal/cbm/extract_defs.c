@@ -416,6 +416,33 @@ static TSNode resolve_lean_func_name(TSNode node, TSNode name) {
     return cbm_find_child_by_kind(node, "ident");
 }
 
+// Haskell infix-form definition head (`a <+> b`, ``x `plus` y``): the defined
+// name is the operator, not the left operand that is the head's first child. A
+// backticked `infix_id` yields its inner variable (`plus`); a symbolic `operator`
+// is returned as-is and parenthesised by cbm_func_name_node_text, matching the
+// prefix form `(<+>) a b = ...` (#2440).
+static TSNode resolve_haskell_infix_head_name(TSNode head) {
+    enum { INFIX_MIN_CHILDREN = 3, INFIX_OP_IDX = 1 };
+    TSNode op = ts_node_child_by_field_name(head, TS_FIELD("operator"));
+    if (ts_node_is_null(op) && ts_node_child_count(head) >= INFIX_MIN_CHILDREN) {
+        op = ts_node_child(head, INFIX_OP_IDX);
+    }
+    if (!ts_node_is_null(op)) {
+        const char *ok = ts_node_type(op);
+        if (strcmp(ok, "operator") == 0) {
+            return op;
+        }
+        if (strcmp(ok, "infix_id") == 0) {
+            TSNode v = cbm_find_child_by_kind(op, "variable");
+            if (!ts_node_is_null(v)) {
+                return v;
+            }
+        }
+    }
+    TSNode null_node = {0};
+    return null_node;
+}
+
 // Haskell: resolve function name from first named child (variable/name).
 static TSNode resolve_haskell_func_name(TSNode node) {
     if (ts_node_named_child_count(node) > 0) {
@@ -423,6 +450,9 @@ static TSNode resolve_haskell_func_name(TSNode node) {
         const char *hk = ts_node_type(head);
         if (strcmp(hk, "variable") == 0 || strcmp(hk, "name") == 0) {
             return head;
+        }
+        if (strcmp(hk, "infix") == 0) {
+            return resolve_haskell_infix_head_name(head);
         }
         if (ts_node_named_child_count(head) > 0) {
             TSNode v = ts_node_named_child(head, 0);
@@ -5772,7 +5802,7 @@ static void set_def_complexity(CBMDefinition *def, TSNode body, const CBMLangSpe
  * Walks to the parameter_declaration's `type` field, unwrapping pointer_type
  * and generic_type, and returns the type_identifier text (e.g. "OrderService").
  * Returns NULL if no type_identifier is found. */
-static char *go_receiver_type_name(CBMArena *a, TSNode recv, const char *source) {
+char *cbm_go_receiver_type_name(CBMArena *a, TSNode recv, const char *source) {
     uint32_t nc = ts_node_child_count(recv);
     for (uint32_t i = 0; i < nc; i++) {
         TSNode child = ts_node_child(recv, i);
@@ -7006,12 +7036,27 @@ static void extract_func_def(CBMExtractCtx *ctx, TSNode node, const CBMLangSpec 
          * (and downstream Go IMPLEMENTS/OVERRIDE) link the method to its owning
          * struct/type node.  The parent QN must match the type's node QN, which
          * is computed the same way (cbm_fqn_compute on the type name). */
-        char *recv_type = go_receiver_type_name(a, recv, ctx->source);
+        char *recv_type = cbm_go_receiver_type_name(a, recv, ctx->source);
         if (recv_type && recv_type[0]) {
             /* Must match the Go type node QN (directory-based module) so the
              * DEFINES_METHOD edge links the method to its owning type. */
             def.parent_class = cbm_fqn_compute_source_lang(a, ctx->project, ctx->rel_path,
                                                            recv_type, ctx->language);
+            /* Receiver-qualify the method QN (proj.pkg.Recv.method) — same
+             * shape as the C++ out-of-line path below and Go interface
+             * members. With the flat proj.pkg.method QN every same-name
+             * method in a package collided in the graph upsert: one body
+             * survived and the twins' call edges accreted onto it. The
+             * call-scope side (compute_func_qn in extract_unified.c) mirrors
+             * this formula, and go_lsp consumers read the def QN and
+             * parent_class (receiver_type) verbatim, so resolution joins
+             * stay exact. Go only: templ's Go-derived grammar reaches this
+             * branch too, but its call-scope QN (compute_func_qn) stays flat,
+             * and a def QN the calls do not share would orphan every call
+             * inside a templ method. */
+            if (ctx->language == CBM_LANG_GO && def.parent_class) {
+                def.qualified_name = cbm_arena_sprintf(a, "%s.%s", def.parent_class, name);
+            }
         }
     }
 

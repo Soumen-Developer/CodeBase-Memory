@@ -1189,7 +1189,7 @@ TEST(mcp_initialize_response) {
     ASSERT_NOT_NULL(strstr(json, "\"prompts\":{\"listChanged\":false}"));
     ASSERT_NOT_NULL(strstr(json, "\"instructions\":"));
     ASSERT_NOT_NULL(strstr(json, "search_graph"));
-    ASSERT_NOT_NULL(strstr(json, "auto-refresh"));
+    ASSERT_NOT_NULL(strstr(json, "refreshes automatically"));
     ASSERT_NOT_NULL(strstr(json, "2025-11-25"));
     free(json);
 
@@ -1365,7 +1365,11 @@ TEST(mcp_metadata_byte_budget) {
      * review when a schema or new tool grows the model-visible baseline. */
     char *init = cbm_mcp_initialize_response(NULL);
     ASSERT_NOT_NULL(init);
-    ASSERT_LT((int)strlen(init), 512);
+    /* 1.5 KiB (raised from 512 B): under tool search the server instructions
+     * and the tool names are all a client loads before the model decides how
+     * to answer, so they now say which structural questions the graph answers
+     * (Claude Code cuts instructions at 4,096 characters). */
+    ASSERT_LT((int)strlen(init), 1536);
     free(init);
 
     char *json = cbm_mcp_tools_list();
@@ -1395,6 +1399,79 @@ TEST(mcp_metadata_byte_budget) {
     }
     yyjson_doc_free(doc);
     free(json);
+    PASS();
+}
+
+static bool mcp_tool_loads_upfront(const char *name) {
+    return strcmp(name, "search_graph") == 0 || strcmp(name, "trace_path") == 0 ||
+           strcmp(name, "get_code_snippet") == 0;
+}
+
+TEST(mcp_tools_list_loads_structural_path_upfront) {
+    /* Claude Code defers MCP tools behind ToolSearch; exactly the structural
+     * discovery path carries _meta["anthropic/alwaysLoad"], in every profile
+     * that lists it, and no other tool grows a _meta object. */
+    static const cbm_mcp_tool_profile_t profiles[] = {
+        CBM_MCP_TOOL_PROFILE_ALL,
+        CBM_MCP_TOOL_PROFILE_ANALYSIS,
+        CBM_MCP_TOOL_PROFILE_SCOUT,
+    };
+    for (size_t p = 0U; p < sizeof(profiles) / sizeof(profiles[0]); p++) {
+        cbm_mcp_server_t *srv = cbm_mcp_server_new(NULL);
+        ASSERT_NOT_NULL(srv);
+        cbm_mcp_server_set_tool_profile(srv, profiles[p]);
+        char *resp =
+            cbm_mcp_server_handle(srv, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+        ASSERT_NOT_NULL(resp);
+        yyjson_doc *doc = yyjson_read(resp, strlen(resp), 0);
+        ASSERT_NOT_NULL(doc);
+        yyjson_val *result = yyjson_obj_get(yyjson_doc_get_root(doc), "result");
+        yyjson_val *tools = result ? yyjson_obj_get(result, "tools") : NULL;
+        ASSERT_TRUE(yyjson_is_arr(tools));
+        int upfront = 0;
+        size_t idx;
+        size_t max;
+        yyjson_val *tool;
+        yyjson_arr_foreach(tools, idx, max, tool) {
+            const char *name = yyjson_get_str(yyjson_obj_get(tool, "name"));
+            ASSERT_NOT_NULL(name);
+            yyjson_val *meta = yyjson_obj_get(tool, "_meta");
+            if (mcp_tool_loads_upfront(name)) {
+                ASSERT_TRUE(yyjson_is_obj(meta));
+                ASSERT_TRUE(yyjson_is_true(yyjson_obj_get(meta, "anthropic/alwaysLoad")));
+                ASSERT_EQ((int)yyjson_obj_size(meta), 1);
+                upfront++;
+            } else {
+                ASSERT_NULL(meta);
+            }
+        }
+        ASSERT_EQ(upfront, 3);
+        yyjson_doc_free(doc);
+        free(resp);
+        cbm_mcp_server_free(srv);
+    }
+    PASS();
+}
+
+TEST(mcp_server_instructions_name_structural_questions) {
+    /* With tool search the instructions are what a client shows before the
+     * model searches (Codex also uses them as the namespace description), so
+     * they must say which questions the graph answers and where grep fits. */
+    char *init = cbm_mcp_initialize_response(NULL);
+    ASSERT_NOT_NULL(init);
+    yyjson_doc *doc = yyjson_read(init, strlen(init), 0);
+    ASSERT_NOT_NULL(doc);
+    const char *instructions =
+        yyjson_get_str(yyjson_obj_get(yyjson_doc_get_root(doc), "instructions"));
+    ASSERT_NOT_NULL(instructions);
+    ASSERT_LTE((int)strlen(instructions), 4096);
+    ASSERT_NOT_NULL(strstr(instructions, "code knowledge graph"));
+    ASSERT_NOT_NULL(strstr(instructions, "who calls a function"));
+    ASSERT_NOT_NULL(strstr(instructions, "call chains"));
+    ASSERT_NOT_NULL(strstr(instructions, "which code a change affects"));
+    ASSERT_NOT_NULL(strstr(instructions, "Grep and file reads fit literal text"));
+    yyjson_doc_free(doc);
+    free(init);
     PASS();
 }
 
@@ -2118,6 +2195,9 @@ TEST(server_handle_analysis_profile_filters_and_rejects_mutators) {
     ASSERT_NOT_NULL(strstr(resp, "analysis tool profile"));
     ASSERT_NOT_NULL(strstr(resp, "check_index_coverage"));
     ASSERT_NULL(strstr(resp, "index_repository"));
+    /* Profile instructions name the structural questions, like the default. */
+    ASSERT_NOT_NULL(strstr(resp, "who calls a function"));
+    ASSERT_NOT_NULL(strstr(resp, "which code a change affects"));
     free(resp);
 
     resp = cbm_mcp_server_handle(srv, "{\"jsonrpc\":\"2.0\",\"id\":220,\"method\":\"tools/list\"}");
@@ -2160,6 +2240,7 @@ TEST(server_handle_scout_profile_exposes_only_the_fast_tier) {
     ASSERT_NOT_NULL(strstr(resp, "scout tool profile"));
     ASSERT_NOT_NULL(strstr(resp, "check_index_coverage"));
     ASSERT_NULL(strstr(resp, "index_repository"));
+    ASSERT_NOT_NULL(strstr(resp, "who calls a function"));
     ASSERT_FALSE(mcp_saw_autoindex_log);
     free(resp);
 
@@ -2379,6 +2460,59 @@ TEST(server_handle_unknown_method) {
     free(resp);
 
     cbm_mcp_server_free(srv);
+    PASS();
+}
+
+/* Issue #2433: a modern client probes server/discover before initialize.
+ * The -32601 stays so it falls back; only that probe is logged as info. */
+TEST(server_handle_discover_probe_logs_info) {
+    mcp_log_buf[0] = '\0';
+    CBMLogLevel prev_level = cbm_log_get_level();
+    cbm_log_set_level(CBM_LOG_DEBUG);
+    cbm_log_set_format(CBM_LOG_FORMAT_TEXT);
+    cbm_log_set_sink_ex(mcp_capture_log, CBM_LOG_SINK_REPLACE);
+
+    cbm_mcp_server_t *srv = cbm_mcp_server_new(NULL);
+
+    char *resp =
+        cbm_mcp_server_handle(srv, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"server/discover\"}");
+    ASSERT_NOT_NULL(resp);
+    ASSERT_NOT_NULL(strstr(resp, "\"code\":-32601"));
+    ASSERT_NOT_NULL(strstr(resp, "Method not found"));
+    ASSERT_NOT_NULL(strstr(mcp_log_buf, "method=server/discover"));
+    ASSERT_NOT_NULL(strstr(mcp_log_buf, "level=info"));
+    ASSERT_NOT_NULL(strstr(mcp_log_buf, "status=ok"));
+    ASSERT_NULL(strstr(mcp_log_buf, "level=warn"));
+    ASSERT_NULL(strstr(mcp_log_buf, "status=error"));
+    free(resp);
+
+    mcp_log_buf[0] = '\0';
+    resp =
+        cbm_mcp_server_handle(srv, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"unknown/method\"}");
+    ASSERT_NOT_NULL(resp);
+    ASSERT_NOT_NULL(strstr(resp, "-32601"));
+    ASSERT_NOT_NULL(strstr(mcp_log_buf, "method=unknown/method"));
+    ASSERT_NOT_NULL(strstr(mcp_log_buf, "level=warn"));
+    ASSERT_NOT_NULL(strstr(mcp_log_buf, "status=error"));
+    free(resp);
+
+    resp = cbm_mcp_server_handle(srv, "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"initialize\","
+                                      "\"params\":{\"protocolVersion\":\"2026-07-28\"}}");
+    ASSERT_NOT_NULL(resp);
+    ASSERT_NOT_NULL(strstr(resp, "2025-11-25"));
+    ASSERT_NULL(strstr(resp, "2026-07-28"));
+    free(resp);
+
+    resp =
+        cbm_mcp_server_handle(srv, "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"resources/list\"}");
+    ASSERT_NOT_NULL(resp);
+    ASSERT_NOT_NULL(strstr(resp, "\"resources\":[]"));
+    ASSERT_NULL(strstr(resp, "-32601"));
+    free(resp);
+
+    cbm_mcp_server_free(srv);
+    cbm_log_set_sink(NULL);
+    cbm_log_set_level(prev_level);
     PASS();
 }
 
@@ -24876,6 +25010,8 @@ SUITE(mcp) {
     RUN_TEST(mcp_tools_list_latest_metadata);
     RUN_TEST(mcp_discovery_defaults_match_runtime_contract);
     RUN_TEST(mcp_metadata_byte_budget);
+    RUN_TEST(mcp_tools_list_loads_structural_path_upfront);
+    RUN_TEST(mcp_server_instructions_name_structural_questions);
     RUN_TEST(mcp_tools_have_behavior_annotations);
     RUN_TEST(mcp_tool_annotations_only_mutators_are_writable_issue2118);
     RUN_TEST(mcp_index_repository_declares_name_override_issue571);
@@ -24930,6 +25066,7 @@ SUITE(mcp) {
     RUN_TEST(server_handle_prompts_get_validates_arguments);
     RUN_TEST(server_handle_logs_request_without_params);
     RUN_TEST(server_handle_unknown_method);
+    RUN_TEST(server_handle_discover_probe_logs_info);
 
     /* Server handle — edge cases */
     RUN_TEST(server_handle_invalid_json);
